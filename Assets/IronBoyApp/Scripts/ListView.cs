@@ -96,6 +96,7 @@ public class ListView : MonoBehaviour
 
 		_createdItem = GameObject.Instantiate(item);
 		_createdItem.transform.SetParent(itemPanel.transform);
+		_createdItem.transform.localScale = Vector3.one;
 		_createdItem.owner = this;
 		if(_createdItem.image != null)
 		{
