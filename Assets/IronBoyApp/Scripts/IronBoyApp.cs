@@ -71,7 +71,6 @@ public class IronBoyApp : MonoBehaviour
 								{
 								}
 
-								DebugRxPacket(6, "Type1");
 								_rxDataBytes.RemoveRange(0, 6);
 								_processRx = false;
 							}
@@ -87,7 +86,6 @@ public class IronBoyApp : MonoBehaviour
 									_rollAngle = (int)(_rxDataBytes[9] << 8 + _rxDataBytes[8]);
 								}
 
-								DebugRxPacket(15, "Type2");
 								_rxDataBytes.RemoveRange(0, 15);
 								_processRx = false;
 							}
@@ -106,11 +104,6 @@ public class IronBoyApp : MonoBehaviour
 		}
 	}
 
-	public void TestPacket()
-	{
-		RunMotion(254, 10, 1f, 1f, 1f, 1f);
-	}
-
 	private void DebugRxPacket(int count, string text)
 	{
 		string debugText = text + ": ";
@@ -124,9 +117,6 @@ public class IronBoyApp : MonoBehaviour
 
 	public void Ping(int robotID)
 	{
-		if(_processRx == true)
-			return;
-		
 		byte[] packet = new byte[7];
 		
 		packet[0] = 0xff;
@@ -140,15 +130,11 @@ public class IronBoyApp : MonoBehaviour
 			checksum += packet[i];
 		packet[6] = checksum;
 		
-		commObject.Write(packet);
-		_processRx = true;
+		SendPacket(packet);
 	}
 
 	public void RunMotion(int robotID, int motionIndex, float lVertical, float lHorizontal, float rVertical, float rHorizontal)
 	{
-		if(_processRx == true)
-			return;
-
 		byte[] packet = new byte[15];
 
 		packet[0] = 0xff;
@@ -174,15 +160,11 @@ public class IronBoyApp : MonoBehaviour
 			checksum += packet[i];
 		packet[14] = checksum;
 
-		commObject.Write(packet);
-		_processRx = true;
+		SendPacket(packet);
 	}
 
 	public void SetFunction(int robotID, float motionSpeed, bool balance, bool autoRecovery, bool torque)
 	{
-		if(_processRx == true)
-			return;
-
 		_motionSpeed = Mathf.Clamp(motionSpeed, 0.5f, 1.5f);
 		_balance = balance;
 		_autoRecovery = autoRecovery;
@@ -218,8 +200,21 @@ public class IronBoyApp : MonoBehaviour
 			checksum += packet[i];
 		packet[9] = checksum;
 		
+		SendPacket(packet);
+	}
+
+	private void SendPacket(byte[] packet)
+	{
+		if(_connected == false)
+			return;
+
 		commObject.Write(packet);
-		_processRx = true;
+		
+		if(_processRx == false)
+		{
+			TimeoutReset();
+			_processRx = true;
+		}
 	}
 
 	private bool Checksum(int length)
