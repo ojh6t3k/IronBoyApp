@@ -217,8 +217,8 @@ public class ButtonManager : MonoBehaviour
 			buttonUR = buttonValue;
 		else if(buttonName.Equals("ButtonR"))
 			buttonR = buttonValue;
-		else if(buttonName.Equals("ButtonUR"))
-			buttonUR = buttonValue;
+		else if(buttonName.Equals("ButtonDR"))
+			buttonDR = buttonValue;
 		else if(buttonName.Equals("ButtonD"))
 			buttonD = buttonValue;
 		else if(buttonName.Equals("ButtonDL"))
@@ -227,6 +227,8 @@ public class ButtonManager : MonoBehaviour
 			buttonL = buttonValue;
 		else if(buttonName.Equals("ButtonUL"))
 			buttonUL = buttonValue;
+		else if(buttonName.Equals("ButtonC"))
+			buttonC = buttonValue;
 		else if(buttonName.Equals("Button1"))
 			button1 = buttonValue;
 		else if(buttonName.Equals("Button2"))

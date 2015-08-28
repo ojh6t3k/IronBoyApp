@@ -94,9 +94,10 @@ public class ListView : MonoBehaviour
 			return;
 		}
 
-		_createdItem = GameObject.Instantiate(item);
-		_createdItem.transform.SetParent(itemPanel.transform);
-		_createdItem.transform.localScale = Vector3.one;
+		GameObject go = GameObject.Instantiate(item.gameObject);
+		go.transform.SetParent(itemPanel.transform);
+		go.transform.localScale = Vector3.one;
+		_createdItem = go.GetComponent<ListItem> ();
 		_createdItem.owner = this;
 		if(_createdItem.image != null)
 		{

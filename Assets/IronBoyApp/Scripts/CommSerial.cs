@@ -16,6 +16,7 @@ public class CommSerial : CommObject
 	public List<string> portNames = new List<string>();
 	public string portName;
 	public int baudrate = 115200;
+	public bool debugDisplay = false;
 
 	public Text uiText;
 	public RectTransform uiPanel;
@@ -42,19 +43,25 @@ public class CommSerial : CommObject
 	public void PortSearch()
 	{
 		portNames.Clear();
-#if UINTY_STANDALONE_WIN || UNITY_EDITOR_WIN
-		portNames.AddRange(SerialPort.GetPortNames());
-#else
-		string prefix = "/dev/";
-		string[] ports = Directory.GetFiles("/dev/", "*.*");
-		foreach (string p in ports)
-		{
-			if(p.StartsWith ("/dev/cu.usb") == true)
-				portNames.Add(p.Substring(prefix.Length));
-		//	else if(p.StartsWith ("/dev/tty.usb") == true)
-		//		portNames.Add(p.Substring(prefix.Length));
+
+		if (Application.platform == RuntimePlatform.WindowsPlayer
+			|| Application.platform == RuntimePlatform.WindowsEditor)
+        {
+			portNames.AddRange(SerialPort.GetPortNames());
 		}
-#endif
+        else if (Application.platform == RuntimePlatform.OSXPlayer
+			    || Application.platform == RuntimePlatform.OSXEditor)
+        {
+            string prefix = "/dev/";
+            string[] ports = Directory.GetFiles("/dev/", "*.*");
+            foreach (string p in ports)
+            {
+                if(p.StartsWith ("/dev/cu.usb") == true)
+                    portNames.Add(p.Substring(prefix.Length));
+                //  else if(p.StartsWith ("/dev/tty.usb") == true)
+                //      portNames.Add(p.Substring(prefix.Length));
+            }
+		}
 
 		if(uiPanel != null && uiItem != null)
 		{
@@ -98,13 +105,20 @@ public class CommSerial : CommObject
 
 	public override void Open()
 	{
-#if UINTY_STANDALONE_WIN || UNITY_EDITOR_WIN
-		_serialPort.PortName = "//./" + portName;
-#elif UINTY_STANDALONE_OSX || UNITY_EDITOR_OSX
-		_serialPort.PortName = "/dev/" + portName;
-#else
-		_serialPort.PortName = portName;
-#endif
+        if (Application.platform == RuntimePlatform.WindowsPlayer
+            || Application.platform == RuntimePlatform.WindowsEditor)
+        {
+            _serialPort.PortName = "//./" + portName;
+        }
+        else if (Application.platform == RuntimePlatform.OSXPlayer
+                 || Application.platform == RuntimePlatform.OSXEditor)
+        {
+            _serialPort.PortName = "/dev/" + portName;
+        }
+        else
+        {
+            _serialPort.PortName = portName;
+        }
 
 		try
 		{
@@ -144,6 +158,13 @@ public class CommSerial : CommObject
 		try
 		{
 			_serialPort.Write(bytes, 0, bytes.Length);
+			if(debugDisplay == true)
+			{
+				string debugString = "TX: ";
+				for(int i=0; i<bytes.Length; i++)
+					debugString += bytes[i].ToString("x") + " ";
+				Debug.Log(debugString);
+			}
 		}
 		catch(Exception)
 		{
@@ -174,10 +195,19 @@ public class CommSerial : CommObject
 			}
 		}
 
-		if(bytes.Count == 0)
+		if (bytes.Count == 0)
 			return null;
 		else
-			return bytes.ToArray();
+		{
+			if(debugDisplay == true)
+			{
+				string debugString = "RX: ";
+				for(int i=0; i<bytes.Count; i++)
+					debugString += bytes[i].ToString("x") + " ";
+				Debug.Log(debugString);
+			}
+			return bytes.ToArray ();
+		}
 	}
 
 	public override bool IsOpen

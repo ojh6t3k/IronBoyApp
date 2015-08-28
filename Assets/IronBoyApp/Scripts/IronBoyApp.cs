@@ -126,7 +126,7 @@ public class IronBoyApp : MonoBehaviour
 		packet[4] = 0x01; // Feedback
 		packet[5] = 0x00; // Transmit tag
 		byte checksum = 0;
-		for(int i=2; i<(packet.Length - 2); i++)
+		for(int i=2; i<(packet.Length - 1); i++)
 			checksum += packet[i];
 		packet[6] = checksum;
 		
@@ -156,7 +156,7 @@ public class IronBoyApp : MonoBehaviour
 		packet[12] = 0xff;
 		packet[13] = 0xff;
 		byte checksum = 0;
-		for(int i=2; i<(packet.Length - 2); i++)
+		for(int i=2; i<(packet.Length - 1); i++)
 			checksum += packet[i];
 		packet[14] = checksum;
 
@@ -175,7 +175,7 @@ public class IronBoyApp : MonoBehaviour
 		packet[0] = 0xff;
 		packet[1] = 0xff;
 		packet[2] = (byte)robotID;
-		packet[3] = 0x66; // Instruction
+		packet[3] = 0x05; // Instruction
 		packet[4] = 0x00; // Transmit tag
 		int iValue = (int)(_motionSpeed * 100f);
 		packet[5] = (byte)iValue;
@@ -196,7 +196,7 @@ public class IronBoyApp : MonoBehaviour
 			flag &= 0x7f;
 		packet[8] = flag;
 		byte checksum = 0;
-		for(int i=2; i<(packet.Length - 2); i++)
+		for(int i=2; i<(packet.Length - 1); i++)
 			checksum += packet[i];
 		packet[9] = checksum;
 		
@@ -220,7 +220,7 @@ public class IronBoyApp : MonoBehaviour
 	private bool Checksum(int length)
 	{
 		byte checksum = 0;
-		for(int i=2; i<(length - 2); i++)
+		for(int i=2; i<(length - 1); i++)
 			checksum += _rxDataBytes[i];
 
 		if(_rxDataBytes[length - 1] == checksum)
@@ -341,6 +341,8 @@ public class IronBoyApp : MonoBehaviour
 		_processRx = false;
 		_rxDataBytes.Clear();
 		TimeoutReset();
+
+		OnConnected.Invoke ();
 	}
 	
 	private void CommOpenFailEventHandler(object sender, EventArgs e)

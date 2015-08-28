@@ -10,6 +10,7 @@ public class CommSerialInspector : Editor
 	SerializedProperty portNames;
 	SerializedProperty portName;
 	SerializedProperty baudrate;
+	SerializedProperty debugDisplay;
 	SerializedProperty uiText;
 	SerializedProperty uiPanel;
 	SerializedProperty uiItem;
@@ -19,6 +20,7 @@ public class CommSerialInspector : Editor
 		portNames = serializedObject.FindProperty("portNames");
 		portName = serializedObject.FindProperty("portName");
 		baudrate = serializedObject.FindProperty("baudrate");
+		debugDisplay = serializedObject.FindProperty("debugDisplay");
 		uiText = serializedObject.FindProperty("uiText");
 		uiPanel = serializedObject.FindProperty("uiPanel");
 		uiItem = serializedObject.FindProperty("uiItem");
@@ -57,6 +59,7 @@ public class CommSerialInspector : Editor
 		EditorGUILayout.EndHorizontal();
 
 		EditorGUILayout.PropertyField(baudrate, new GUIContent("Baudrate"));
+		EditorGUILayout.PropertyField(debugDisplay, new GUIContent("Debug Display"));
 
 		foldout = EditorGUILayout.Foldout(foldout, "UI objects");
 		if(foldout == true)
