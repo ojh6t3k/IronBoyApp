@@ -6,7 +6,6 @@ using UnityEditor.Events;
 [CustomEditor(typeof(IronBoyApp))]
 public class IronBoyAppInspector : Editor
 {
-	SerializedProperty commObject;
 	SerializedProperty timeoutSec;
 	SerializedProperty OnConnected;
 	SerializedProperty OnConnectionFailed;
@@ -14,7 +13,6 @@ public class IronBoyAppInspector : Editor
 	
 	void OnEnable()
 	{
-		commObject = serializedObject.FindProperty("commObject");
 		timeoutSec = serializedObject.FindProperty("timeoutSec");
 		OnConnected = serializedObject.FindProperty("OnConnected");
 		OnConnectionFailed = serializedObject.FindProperty("OnConnectionFailed");
@@ -35,7 +33,7 @@ public class IronBoyAppInspector : Editor
 		{
 			if(ironBoy.commObject != null)
 			{
-				if(ironBoy.Connected == true)
+				if(ironBoy.connected == true)
 				{
 					if(GUILayout.Button("Disconnect") == true)
 						ironBoy.Disconnect();
@@ -54,7 +52,6 @@ public class IronBoyAppInspector : Editor
 			}
 		}
 
-		EditorGUILayout.PropertyField(commObject, new GUIContent("commObject"));
 		EditorGUILayout.PropertyField(timeoutSec, new GUIContent("Timeout(sec)"));
 		
 		EditorGUILayout.Separator();

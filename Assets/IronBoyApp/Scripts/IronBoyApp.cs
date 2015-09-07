@@ -3,18 +3,11 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
+using SmartMaker;
 
 
-public class IronBoyApp : MonoBehaviour
+public class IronBoyApp : HostApp
 {
-	public CommObject commObject;
-	public float timeoutSec = 5f;
-
-	public UnityEvent OnConnected;
-	public UnityEvent OnConnectionFailed;
-	public UnityEvent OnDisconnected;
-
-	private bool _connected = false;
 	private bool _processRx = false;
 	private float _time = 0f;
 	private int _batteryRemaining;
@@ -27,79 +20,58 @@ public class IronBoyApp : MonoBehaviour
 	private List<byte> _rxDataBytes = new List<byte>();
 
 
-	// Use this for initialization
-	void Start ()
+	protected override void OnUpdate ()
 	{
-		if(commObject != null)
+		if(_processRx == true)
 		{
-			commObject.OnOpened += CommOpenEventHandler;
-			commObject.OnOpenFailed += CommOpenFailEventHandler;
-			commObject.OnErrorClosed += CommErrorCloseEventHandler;
-		}	
-	}
-	
-	// Update is called once per frame
-	void Update ()
-	{
-		if(_connected == true)
-		{
-			if(_processRx == true)
+			byte[] readBytes = commObject.Read();
+			if(readBytes != null)
 			{
-				byte[] readBytes = commObject.Read();
-				if(readBytes != null)
+				for(int i=0; i<readBytes.Length; i++)
+					_rxDataBytes.Add(readBytes[i]);
+				
+				// find header
+				while(_rxDataBytes.Count > 2)
 				{
-					for(int i=0; i<readBytes.Length; i++)
-						_rxDataBytes.Add(readBytes[i]);
-
-					// find header
-					while(_rxDataBytes.Count > 2)
-					{
-						if(_rxDataBytes[0] == 0xff && _rxDataBytes[1] == 0xff)
-							break;
-
-						_rxDataBytes.RemoveAt(0);
-					}
-
-					// check feedback
-					if(_rxDataBytes.Count >= 4)
-					{
-						if(_rxDataBytes[3] == 0x01)
-						{
-							if(_rxDataBytes.Count >= 6)
-							{
-								if(Checksum(6) == true)
-								{
-								}
-
-								_rxDataBytes.RemoveRange(0, 6);
-								_processRx = false;
-							}
-						}
-						else if(_rxDataBytes[3] == 0x07)
-						{
-							if(_rxDataBytes.Count >= 15)
-							{
-								if(Checksum(15) == true)
-								{
-									_batteryRemaining = _rxDataBytes[5];
-									_pitchAngle = (int)(_rxDataBytes[7] << 8 + _rxDataBytes[6]);
-									_rollAngle = (int)(_rxDataBytes[9] << 8 + _rxDataBytes[8]);
-								}
-
-								_rxDataBytes.RemoveRange(0, 15);
-								_processRx = false;
-							}
-						}
-					}
-
-					TimeoutReset();
+					if(_rxDataBytes[0] == 0xff && _rxDataBytes[1] == 0xff)
+						break;
+					
+					_rxDataBytes.RemoveAt(0);
 				}
-
-				// Check timeout
-				if(_time > timeoutSec) // wait until timeout seconds
-					ErrorDisconnect();
-				else
-					_time += Time.deltaTime;
+				
+				// check feedback
+				if(_rxDataBytes.Count >= 4)
+				{
+					if(_rxDataBytes[3] == 0x01)
+					{
+						if(_rxDataBytes.Count >= 6)
+						{
+							if(Checksum(6) == true)
+							{
+							}
+							
+							_rxDataBytes.RemoveRange(0, 6);
+							_processRx = false;
+						}
+					}
+					else if(_rxDataBytes[3] == 0x07)
+					{
+						if(_rxDataBytes.Count >= 15)
+						{
+							if(Checksum(15) == true)
+							{
+								_batteryRemaining = _rxDataBytes[5];
+								_pitchAngle = (int)(_rxDataBytes[7] << 8 + _rxDataBytes[6]);
+								_rollAngle = (int)(_rxDataBytes[9] << 8 + _rxDataBytes[8]);
+							}
+							
+							_rxDataBytes.RemoveRange(0, 15);
+							_processRx = false;
+						}
+					}
+				}
+				
+				TimeoutReset();
 			}
 		}
 	}
@@ -205,7 +177,7 @@ public class IronBoyApp : MonoBehaviour
 
 	private void SendPacket(byte[] packet)
 	{
-		if(_connected == false)
+		if(connected == false)
 			return;
 
 		commObject.Write(packet);
@@ -285,73 +257,12 @@ public class IronBoyApp : MonoBehaviour
 		}
 	}
 
-	public bool Connected
+	protected override void OnCommOpen ()
 	{
-		get
-		{
-			return _connected;
-		}
-	}
-	
-	public void Connect()
-	{
-		if(commObject == null)
-			return;
-		
-		commObject.Open();
-	}
-	
-	private void ErrorDisconnect()
-	{
-		bool state = _connected;
-		_connected = false;
-
-		commObject.Close();
-
-		if(state == false)
-		{
-			Debug.Log("Failed to open CommObject!");
-			OnConnectionFailed.Invoke();
-		}
-		else
-		{
-			Debug.Log("Lost connection!");
-			OnDisconnected.Invoke();
-		}
-	}
-	
-	public void Disconnect()
-	{
-		if(commObject == null)
-			return;
-		
-		_connected = false;
-		commObject.Close();		
-		OnDisconnected.Invoke();
-	}
-	
-	private void TimeoutReset()
-	{
-		_time = 0;
-	}
-
-	private void CommOpenEventHandler(object sender, EventArgs e)
-	{
-		_connected = true;
 		_processRx = false;
 		_rxDataBytes.Clear();
 		TimeoutReset();
-
+		
 		OnConnected.Invoke ();
-	}
-	
-	private void CommOpenFailEventHandler(object sender, EventArgs e)
-	{
-		ErrorDisconnect();
-	}
-	
-	private void CommErrorCloseEventHandler(object sender, EventArgs e)
-	{
-		ErrorDisconnect();
 	}
 }

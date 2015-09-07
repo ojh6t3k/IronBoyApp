@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using SmartMaker;
 
 
 [RequireComponent(typeof(ListView))]
@@ -8,7 +9,7 @@ public class PortListView : MonoBehaviour
 	public CommObject commObject;
 	public ListItem listItem;
 
-	private CommSerial _commSerial;
+	private CommBluetooth _commBluetooth;
 	private ListView _listView;
 
 	// Use this for initialization
@@ -16,8 +17,8 @@ public class PortListView : MonoBehaviour
 	{
 		if(commObject != null)
 		{
-			_commSerial = (CommSerial)commObject;
-			if(_commSerial == null)
+			_commBluetooth = (CommBluetooth)commObject;
+			if(_commBluetooth == null)
 			{
 			}
 		}
@@ -38,20 +39,20 @@ public class PortListView : MonoBehaviour
 		if(_listView != null)
 			_listView.ClearItem();
 
-		if(_commSerial != null)
+		if(_commBluetooth != null)
 		{
-			_commSerial.PortSearch();
-			for(int i=0; i<_commSerial.portNames.Count; i++)
-				_listView.AddItem(listItem, null, _commSerial.portNames[i], null);
+			_commBluetooth.DeviceSearch();
+			for(int i=0; i<_commBluetooth.devNames.Count; i++)
+				_listView.AddItem(listItem, null, _commBluetooth.devNames[i], null);
 		}
 	}
 
 	private void OnChangedSelection()
 	{
 		ListItem selectedItem = _listView.selectedItem;
-		if(_commSerial != null)
+		if(_commBluetooth != null)
 		{
-			_commSerial.portName = selectedItem.text.text;
+			_commBluetooth.devName = selectedItem.text.text;
 		}
 	}
 }
