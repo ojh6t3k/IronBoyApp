@@ -29,6 +29,11 @@ public class ButtonManager : MonoBehaviour
 
 	private string _buttonName;
 
+	void Awake()
+	{
+		Load();
+	}
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -40,8 +45,6 @@ public class ButtonManager : MonoBehaviour
 			uiInput.interactable = false;
 			uiInput.onEndEdit.AddListener(OnEndEdit);
 		}
-
-		Load();
 	}
 	
 	// Update is called once per frame

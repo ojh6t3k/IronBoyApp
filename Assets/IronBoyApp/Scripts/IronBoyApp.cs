@@ -9,7 +9,6 @@ using SmartMaker;
 public class IronBoyApp : HostApp
 {
 	private bool _processRx = false;
-	private float _time = 0f;
 	private int _batteryRemaining;
 	private int _rollAngle;
 	private int _pitchAngle;
@@ -52,6 +51,7 @@ public class IronBoyApp : HostApp
 							
 							_rxDataBytes.RemoveRange(0, 6);
 							_processRx = false;
+							TimeoutReset();
 						}
 					}
 					else if(_rxDataBytes[3] == 0x07)
@@ -67,11 +67,10 @@ public class IronBoyApp : HostApp
 							
 							_rxDataBytes.RemoveRange(0, 15);
 							_processRx = false;
+							TimeoutReset();
 						}
 					}
 				}
-				
-				TimeoutReset();
 			}
 		}
 	}
