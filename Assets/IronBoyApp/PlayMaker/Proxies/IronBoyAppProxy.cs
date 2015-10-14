@@ -8,12 +8,14 @@ public class IronBoyAppProxy : MonoBehaviour
 	public readonly string builtInOnConnected = "IRONBOY APP / ON CONNECTED";
 	public readonly string builtInOnConnectionFailed = "IRONBOY APP / ON CONNECTION FAILED";
 	public readonly string builtInOnDisconnected = "IRONBOY APP / ON DISCONNECTED";
-	
-	public string eventOnConnected = "IRONBOY APP / ON CONNECTED";
+    public readonly string builtInOnLostConnection = "IRONBOY APP / ON LOST CONNECTION";
+
+    public string eventOnConnected = "IRONBOY APP / ON CONNECTED";
 	public string eventOnConnectionFailed = "IRONBOY APP / ON CONNECTION FAILED";
 	public string eventOnDisconnected = "IRONBOY APP / ON DISCONNECTED";
+    public string eventOnLostConnection = "IRONBOY APP / ON LOST CONNECTION";
 
-	private IronBoyApp _ironBoy;
+    private IronBoyApp _ironBoy;
 	private PlayMakerFSM _fsm;
 	private FsmEventTarget _fsmEventTarget;
 
@@ -31,7 +33,8 @@ public class IronBoyAppProxy : MonoBehaviour
 			_ironBoy.OnConnected.AddListener(OnConnected);
 			_ironBoy.OnConnectionFailed.AddListener(OnConnectionFailed);
 			_ironBoy.OnDisconnected.AddListener(OnDisconnected);
-		}
+            _ironBoy.OnLostConnection.AddListener(OnLostConnection);
+        }
 		
 		_fsmEventTarget = new FsmEventTarget();
 		_fsmEventTarget.target = FsmEventTarget.EventTarget.BroadcastAll;
@@ -58,4 +61,9 @@ public class IronBoyAppProxy : MonoBehaviour
 	{
 		_fsm.Fsm.Event(_fsmEventTarget, eventOnDisconnected);
 	}
+
+    private void OnLostConnection()
+    {
+        _fsm.Fsm.Event(_fsmEventTarget, eventOnLostConnection);
+    }
 }

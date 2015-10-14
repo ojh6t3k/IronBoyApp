@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System;
 using UnityEngine.UI;
 
 public class ButtonManager : MonoBehaviour
@@ -7,27 +7,47 @@ public class ButtonManager : MonoBehaviour
 	public ListView uiList;
 	public InputField uiInput;
 
-	public int buttonU = 0;
-	public int buttonUR = 0;
-	public int buttonR = 0;
-	public int buttonDR = 0;
-	public int buttonD = 0;
-	public int buttonDL = 0;
-	public int buttonL = 0;
-	public int buttonUL = 0;
-	public int buttonC = 0;
-	public int button1 = 0;
-	public int button2 = 0;
-	public int button3 = 0;
-	public int button4 = 0;
-	public int button5 = 0;
-	public int button6 = 0;
-	public int button7 = 0;
-	public int button8 = 0;
-	public int button9 = 0;
-	public int button10 = 0;
+	public int buttonU = -1;
+	public int buttonUR = -1;
+	public int buttonR = -1;
+	public int buttonDR = -1;
+	public int buttonD = -1;
+	public int buttonDL = -1;
+	public int buttonL = -1;
+	public int buttonUL = -1;
+	public int buttonC = -1;
+	public int button1 = -1;
+	public int button2 = -1;
+	public int button3 = -1;
+	public int button4 = -1;
+	public int button5 = -1;
+	public int button6 = -1;
+	public int button7 = -1;
+	public int button8 = -1;
+	public int button9 = -1;
+	public int button10 = -1;
 
-	private string _buttonName;
+    private const string _keyButtonU = "IronBoyApp.Config.ButtonU";
+    private const string _keyButtonUR = "IronBoyApp.Config.ButtonUR";
+    private const string _keyButtonR = "IronBoyApp.Config.ButtonR";
+    private const string _keyButtonDR = "IronBoyApp.Config.ButtonDR";
+    private const string _keyButtonD = "IronBoyApp.Config.ButtonD";
+    private const string _keyButtonDL = "IronBoyApp.Config.ButtonDL";
+    private const string _keyButtonL = "IronBoyApp.Config.ButtonL";
+    private const string _keyButtonUL = "IronBoyApp.Config.ButtonUL";
+    private const string _keyButtonC = "IronBoyApp.Config.ButtonC";
+    private const string _keyButton1 = "IronBoyApp.Config.Button1";
+    private const string _keyButton2 = "IronBoyApp.Config.Button2";
+    private const string _keyButton3 = "IronBoyApp.Config.Button3";
+    private const string _keyButton4 = "IronBoyApp.Config.Button4";
+    private const string _keyButton5 = "IronBoyApp.Config.Button5";
+    private const string _keyButton6 = "IronBoyApp.Config.Button6";
+    private const string _keyButton7 = "IronBoyApp.Config.Button7";
+    private const string _keyButton8 = "IronBoyApp.Config.Button8";
+    private const string _keyButton9 = "IronBoyApp.Config.Button9";
+    private const string _keyButton10 = "IronBoyApp.Config.Button10";
+
+    private string _selectedButton = "";
 
 	void Awake()
 	{
@@ -51,14 +71,14 @@ public class ButtonManager : MonoBehaviour
 	void Update ()
 	{
 	
-	}
+	}    
 
 	private void OnChangedSelection()
 	{
 		ListItem selectedItem = uiList.selectedItem;
 		if(selectedItem == null)
 		{
-			_buttonName = "";
+            _selectedButton = "";
 			if(uiInput != null)
 			{
 				uiInput.interactable = false;
@@ -67,7 +87,7 @@ public class ButtonManager : MonoBehaviour
 		}
 		else
 		{
-			_buttonName = selectedItem.gameObject.name;
+            _selectedButton = selectedItem.gameObject.name;
 			if(uiInput != null)
 			{
 				uiInput.interactable = true;
@@ -78,93 +98,78 @@ public class ButtonManager : MonoBehaviour
 
 	private void OnEndEdit(string value)
 	{
-		SetButton(_buttonName, int.Parse(value));
+        try
+        {
+            SetButton(_selectedButton, int.Parse(value));
+        }
+        catch(Exception)
+        {
+
+        }		
 	}
 
 	public void Load()
 	{
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonU"))
-			buttonU = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonU");
+        if (PlayerPrefs.HasKey(_keyButtonU))
+            buttonU = PlayerPrefs.GetInt(_keyButtonU);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonUR"))
-			buttonUR = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonUR");
+        if (PlayerPrefs.HasKey(_keyButtonUR))
+            buttonUR = PlayerPrefs.GetInt(_keyButtonUR);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonR"))
-			buttonR = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonR");
+		if(PlayerPrefs.HasKey(_keyButtonR))
+			buttonR = PlayerPrefs.GetInt(_keyButtonR);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonDR"))
-			buttonDR = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonDR");
+		if(PlayerPrefs.HasKey(_keyButtonDR))
+			buttonDR = PlayerPrefs.GetInt(_keyButtonDR);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonD"))
-			buttonD = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonD");
+		if(PlayerPrefs.HasKey(_keyButtonD))
+			buttonD = PlayerPrefs.GetInt(_keyButtonD);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonDL"))
-			buttonDL = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonDL");
+		if(PlayerPrefs.HasKey(_keyButtonDL))
+			buttonDL = PlayerPrefs.GetInt(_keyButtonDL);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonL"))
-			buttonL = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonL");
+		if(PlayerPrefs.HasKey(_keyButtonL))
+			buttonL = PlayerPrefs.GetInt(_keyButtonL);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonUL"))
-			buttonUL = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonUL");
+		if(PlayerPrefs.HasKey(_keyButtonUL))
+			buttonUL = PlayerPrefs.GetInt(_keyButtonUL);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.ButtonC"))
-			buttonC = PlayerPrefs.GetInt("IronBoyApp.Config.ButtonC");
+		if(PlayerPrefs.HasKey(_keyButtonC))
+			buttonC = PlayerPrefs.GetInt(_keyButtonC);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button1"))
-			button1 = PlayerPrefs.GetInt("IronBoyApp.Config.Button1");
+		if(PlayerPrefs.HasKey(_keyButton1))
+			button1 = PlayerPrefs.GetInt(_keyButton1);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button2"))
-			button2 = PlayerPrefs.GetInt("IronBoyApp.Config.Button2");
+		if(PlayerPrefs.HasKey(_keyButton2))
+			button2 = PlayerPrefs.GetInt(_keyButton2);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button3"))
-			button3 = PlayerPrefs.GetInt("IronBoyApp.Config.Button3");
+		if(PlayerPrefs.HasKey(_keyButton3))
+			button3 = PlayerPrefs.GetInt(_keyButton3);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button4"))
-			button4 = PlayerPrefs.GetInt("IronBoyApp.Config.Button4");
+		if(PlayerPrefs.HasKey(_keyButton4))
+			button4 = PlayerPrefs.GetInt(_keyButton4);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button5"))
-			button5 = PlayerPrefs.GetInt("IronBoyApp.Config.Button5");
+		if(PlayerPrefs.HasKey(_keyButton5))
+			button5 = PlayerPrefs.GetInt(_keyButton5);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button6"))
-			button6 = PlayerPrefs.GetInt("IronBoyApp.Config.Button6");
+		if(PlayerPrefs.HasKey(_keyButton6))
+			button6 = PlayerPrefs.GetInt(_keyButton6);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button7"))
-			button7 = PlayerPrefs.GetInt("IronBoyApp.Config.Button7");
+		if(PlayerPrefs.HasKey(_keyButton7))
+			button7 = PlayerPrefs.GetInt(_keyButton7);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button8"))
-			button8 = PlayerPrefs.GetInt("IronBoyApp.Config.Button8");
+		if(PlayerPrefs.HasKey(_keyButton8))
+			button8 = PlayerPrefs.GetInt(_keyButton8);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button9"))
-			button9 = PlayerPrefs.GetInt("IronBoyApp.Config.Button9");
+		if(PlayerPrefs.HasKey(_keyButton9))
+			button9 = PlayerPrefs.GetInt(_keyButton9);
 
-		if(PlayerPrefs.HasKey("IronBoyApp.Config.Button10"))
-			button10 = PlayerPrefs.GetInt("IronBoyApp.Config.Button10");
+		if(PlayerPrefs.HasKey(_keyButton10))
+			button10 = PlayerPrefs.GetInt(_keyButton10);
 
-		if(uiList != null)
-		{
-			uiList.selectedItem = null;
-			SetButton("ButtonU", buttonU);
-			SetButton("ButtonUR", buttonUR);
-			SetButton("ButtonR", buttonR);
-			SetButton("ButtonDR", buttonDR);
-			SetButton("ButtonD", buttonD);
-			SetButton("ButtonDL", buttonDL);
-			SetButton("ButtonL", buttonL);
-			SetButton("ButtonUL", buttonUL);
-			SetButton("ButtonC", buttonC);
-			SetButton("Button1", button1);
-			SetButton("Button2", button2);
-			SetButton("Button3", button3);
-			SetButton("Button4", button4);
-			SetButton("Button5", button5);
-			SetButton("Button6", button6);
-			SetButton("Button7", button7);
-			SetButton("Button8", button8);
-			SetButton("Button9", button9);
-			SetButton("Button10", button10);
-		}
+        UpdateButtonUI();
 
-		if(uiInput != null)
+        if (uiInput != null)
 		{
 			uiInput.interactable = false;
 			uiInput.text = "";
@@ -173,30 +178,90 @@ public class ButtonManager : MonoBehaviour
 
 	public void Save()
 	{
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonU", buttonU);
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonUR", buttonUR);
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonR", buttonR);
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonDR", buttonDR);
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonD", buttonD);
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonDL", buttonDL);
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonL", buttonL);
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonUL", buttonUL);
-		PlayerPrefs.SetInt("IronBoyApp.Config.ButtonC", buttonC);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button1", button1);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button2", button2);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button3", button3);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button4", button4);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button5", button5);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button6", button6);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button7", button7);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button8", button8);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button9", button9);
-		PlayerPrefs.SetInt("IronBoyApp.Config.Button10", button10);
+        PlayerPrefs.SetInt(_keyButtonU, buttonU);
+        PlayerPrefs.SetInt(_keyButtonUR, buttonUR);
+        PlayerPrefs.SetInt(_keyButtonR, buttonR);
+        PlayerPrefs.SetInt(_keyButtonDR, buttonDR);
+        PlayerPrefs.SetInt(_keyButtonD, buttonD);
+        PlayerPrefs.SetInt(_keyButtonDL, buttonDL);
+        PlayerPrefs.SetInt(_keyButtonL, buttonL);
+        PlayerPrefs.SetInt(_keyButtonUL, buttonUL);
+        PlayerPrefs.SetInt(_keyButtonC, buttonC);
+        PlayerPrefs.SetInt(_keyButton1, button1);
+        PlayerPrefs.SetInt(_keyButton2, button2);
+        PlayerPrefs.SetInt(_keyButton3, button3);
+        PlayerPrefs.SetInt(_keyButton4, button4);
+        PlayerPrefs.SetInt(_keyButton5, button5);
+        PlayerPrefs.SetInt(_keyButton6, button6);
+        PlayerPrefs.SetInt(_keyButton7, button7);
+        PlayerPrefs.SetInt(_keyButton8, button8);
+        PlayerPrefs.SetInt(_keyButton9, button9);
+        PlayerPrefs.SetInt(_keyButton10, button10);
 	}
 
-	public void GetButton(string buttonName, int buttonValue)
-	{
-	}
+    public void ButtonReset()
+    {
+        SetButton(_selectedButton, -1);
+
+        if (uiInput != null)
+        {
+            if(uiInput.interactable)
+                uiInput.text = "None";
+        }
+    }
+
+    public void ButtonResetAll()
+    {
+        buttonU = -1;
+        buttonUR = -1;
+        buttonR = -1;
+        buttonDR = -1;
+        buttonD = -1;
+        buttonDL = -1;
+        buttonL = -1;
+        buttonUL = -1;
+        buttonC = -1;
+        button1 = -1;
+        button2 = -1;
+        button3 = -1;
+        button4 = -1;
+        button5 = -1;
+        button6 = -1;
+        button7 = -1;
+        button8 = -1;
+        button9 = -1;
+        button10 = -1;
+
+        UpdateButtonUI();
+        OnChangedSelection();
+    }
+
+    private void UpdateButtonUI()
+    {
+        if (uiList != null)
+        {
+            uiList.selectedItem = null;
+            SetButton("ButtonU", buttonU);
+            SetButton("ButtonUR", buttonUR);
+            SetButton("ButtonR", buttonR);
+            SetButton("ButtonDR", buttonDR);
+            SetButton("ButtonD", buttonD);
+            SetButton("ButtonDL", buttonDL);
+            SetButton("ButtonL", buttonL);
+            SetButton("ButtonUL", buttonUL);
+            SetButton("ButtonC", buttonC);
+            SetButton("Button1", button1);
+            SetButton("Button2", button2);
+            SetButton("Button3", button3);
+            SetButton("Button4", button4);
+            SetButton("Button5", button5);
+            SetButton("Button6", button6);
+            SetButton("Button7", button7);
+            SetButton("Button8", button8);
+            SetButton("Button9", button9);
+            SetButton("Button10", button10);
+        }
+    }
 
 	public void SetButton(string buttonName, int buttonValue)
 	{
@@ -213,8 +278,12 @@ public class ButtonManager : MonoBehaviour
 		if(item == null)
 			return;
 
-		item.text.text = buttonValue.ToString();
-		if(buttonName.Equals("ButtonU"))
+        if (buttonValue >= 0)
+            item.text.text = buttonValue.ToString();
+        else
+            item.text.text = "None";
+
+        if (buttonName.Equals("ButtonU"))
 			buttonU = buttonValue;
 		else if(buttonName.Equals("ButtonUR"))
 			buttonUR = buttonValue;

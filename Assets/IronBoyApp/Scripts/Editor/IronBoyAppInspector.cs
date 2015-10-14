@@ -6,18 +6,22 @@ using UnityEditor.Events;
 [CustomEditor(typeof(IronBoyApp))]
 public class IronBoyAppInspector : Editor
 {
-	SerializedProperty timeoutSec;
+    SerializedProperty commObject;
+    SerializedProperty timeoutSec;
 	SerializedProperty OnConnected;
 	SerializedProperty OnConnectionFailed;
 	SerializedProperty OnDisconnected;
-	
-	void OnEnable()
+    SerializedProperty OnLostConnection;
+
+    void OnEnable()
 	{
-		timeoutSec = serializedObject.FindProperty("timeoutSec");
+        commObject = serializedObject.FindProperty("commObject");
+        timeoutSec = serializedObject.FindProperty("timeoutSec");
 		OnConnected = serializedObject.FindProperty("OnConnected");
 		OnConnectionFailed = serializedObject.FindProperty("OnConnectionFailed");
 		OnDisconnected = serializedObject.FindProperty("OnDisconnected");
-	}
+        OnLostConnection = serializedObject.FindProperty("OnLostConnection");
+    }
 	
 	public override void OnInspectorGUI()
 	{
@@ -52,13 +56,15 @@ public class IronBoyAppInspector : Editor
 			}
 		}
 
-		EditorGUILayout.PropertyField(timeoutSec, new GUIContent("Timeout(sec)"));
+        EditorGUILayout.PropertyField(commObject, new GUIContent("CommObject"));
+        EditorGUILayout.PropertyField(timeoutSec, new GUIContent("Timeout(sec)"));
 		
 		EditorGUILayout.Separator();
 		EditorGUILayout.PropertyField(OnConnected);
 		EditorGUILayout.PropertyField(OnConnectionFailed);
 		EditorGUILayout.PropertyField(OnDisconnected);
-		
-		this.serializedObject.ApplyModifiedProperties();
+        EditorGUILayout.PropertyField(OnLostConnection);
+
+        this.serializedObject.ApplyModifiedProperties();
 	}
 }
