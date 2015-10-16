@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace HutongGames.PlayMaker.Actions
 {
-    [ActionCategory("IronBoy")]
+    [ActionCategory("SmartMaker")]
     [Tooltip("Vibration.Vibrate()")]
     public class VibrationVibrate : FsmStateAction
     {

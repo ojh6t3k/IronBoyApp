@@ -59,8 +59,9 @@ namespace SmartMaker
         public UnityEvent OnClose;
         public UnityEvent OnOpenFailed;
         public UnityEvent OnErrorClosed;
+        public UnityEvent OnStartSearch;
+        public UnityEvent OnStopSearch;
         public UnityEvent OnFoundDevice;
-        public UnityEvent OnSearchCompleted;
 
         protected bool platformSupport = false;
 
@@ -77,7 +78,11 @@ namespace SmartMaker
 
         }
 
-        public virtual void Search()
+        public virtual void StartSearch()
+        {
+        }
+
+        public virtual void StopSearch()
         {
         }
 

@@ -6,48 +6,57 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Toggle))]
 public class ListItem : MonoBehaviour, IPointerClickHandler
 {
-	public ListView owner;
-	public Image image;
-	public Text text;
-	public Object data;
+    public ListView owner;
+    public Image image;
+    public Text[] textList;
+    public System.Object data;
 
-	private Toggle _toggle;
+    private Toggle _toggle;
 
-	// Use this for initialization
-	void Start ()
-	{
-		_toggle = GetComponent<Toggle>();
-	}
-	
-	// Update is called once per frame
-	void Update ()
-	{
-	
-	}
+    void Awake()
+    {
+    }
 
-	public int index
-	{
-		get
-		{
-			return this.transform.GetSiblingIndex();
-		}
-	}
+    // Use this for initialization
+    void Start()
+    {
+    }
 
-	public bool selected
-	{
-		set
-		{
-			_toggle.isOn = value;
-		}
-		get
-		{
-			return _toggle.isOn;
-		}
-	}
+    // Update is called once per frame
+    void Update()
+    {
 
-	public void OnPointerClick(PointerEventData eventData)
-	{
-		_toggle.isOn = true;
-		owner.selectedItem = this;
-	}
+    }
+
+    public int index
+    {
+        get
+        {
+            return this.transform.GetSiblingIndex();
+        }
+    }
+
+    // This property is for ListView
+    public bool selected
+    {
+        get
+        {
+            if (_toggle == null)
+                _toggle = GetComponent<Toggle>();
+
+            return _toggle.isOn;
+        }
+        set
+        {
+            if (_toggle == null)
+                _toggle = GetComponent<Toggle>();
+
+            _toggle.isOn = value;
+        }
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        owner.selectedItem = this;
+    }
 }

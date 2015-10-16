@@ -4,317 +4,342 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
+
+import com.unity3d.player.UnityPlayer;
+
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.util.Log;
 
-
+@SuppressLint("NewApi")
 public class CommBluetooth
 {
 	// Member fields
     private static CommBluetooth _Instance = null;
+    private static String _logTag = "CommBluetooth";
     private Context _context;
-	private BluetoothAdapter mAdapter;
-	private ConnectThread mConnectThread;
-	private ConnectedThread mConnectedThread;
-    private boolean _isOpening = false;
-	private boolean _isOpened = false;
-	private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-	private byte[] _rcvBuffer = new byte[4096];
-	private int _numRcvedData = 0;
+    private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	private BluetoothAdapter _btAdapter;
+	private BluetoothDevice _btDevice;
+	private BluetoothSocket _btSocket;
+	private InputStream _InStream;
+	private OutputStream _OutStream;
+	private boolean _isOpen = false;
+	private String _unityObject;
+	private String _unityMethodOpenSuccess;
+	private String _unityMethodOpenFailed;
+	private String _unityMethodErrorClose;
+	private String _unityMethodFoundDevice;
+	private boolean _isErrorClose = false;
+	private String _errorMessage;
 
     public static CommBluetooth GetInstance()
     {
+    	Log.d(_logTag, "GetInstance");
+    	
         if(_Instance == null)
             _Instance = new CommBluetooth();
 
         return _Instance;
     }
 
-    public void SetContext(Context context)
+    public boolean Initialize(Context context, String unityObject)
     {
+		Log.d(_logTag, "Initialize");
+		
+      	_btAdapter = BluetoothAdapter.getDefaultAdapter();
+        if(_btAdapter == null)
+        {
+        	Log.d(_logTag, "Bluetooth Adapter Failed");
+        	return false;
+        }
+		
         _context = context;
-        mAdapter = BluetoothAdapter.getDefaultAdapter();
+        _unityObject = unityObject;        
+        _btDevice = null;
+        _btSocket = null;
+        _InStream = null;
+        _OutStream = null;
+        
+        final IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+		intentFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+		intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+		intentFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        _context.registerReceiver(_bluetoothReceiver, intentFilter);
+        _context.registerReceiver(_bluetoothReceiver, new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED));
+
+        return true;
     }
-
-    public synchronized String[] DeviceSearch()
-    {
-        List<String> devNames = new ArrayList<String>();
-
-        try
-        {
-            Set<BluetoothDevice> pairedDevices = mAdapter.getBondedDevices();
-            if (pairedDevices.size() > 0)
-            {
-                for (BluetoothDevice bd : pairedDevices)
-                    devNames.add(bd.getName());
-            }
-        }
-        catch (Exception e)
-        {
-        }
-
-        return devNames.toArray(new String[devNames.size()]);
-    }
-
-    public boolean IsOpening()
-    {
-        return _isOpening;
-    }
-
-	public boolean IsOpen()
+    
+    public void SetUnityMethodOpenSuccess(String unityMethod)
 	{
-		return _isOpened;
+		_unityMethodOpenSuccess = unityMethod;
 	}
 	
-	public synchronized boolean Open(String deviceName)
+	public void SetUnityMethodOpenFailed(String unityMethod)
 	{
-        Set<BluetoothDevice> pairedDevices = mAdapter.getBondedDevices();
-        for (BluetoothDevice bd : pairedDevices)
-        {
-            if (bd.getName().equalsIgnoreCase(deviceName))
-            {
-        		// Cancel any thread currently running a connection
-        		if (mConnectedThread != null)
-        		{
-        			mConnectedThread.cancel();
-        			mConnectedThread = null;
-        		}
+		_unityMethodOpenFailed = unityMethod;
+	}
+	
+	public void SetUnityMethodErrorClose(String unityMethod)
+	{
+		_unityMethodErrorClose = unityMethod;
+	}
+	
+	public void SetUnityMethodFoundDevice(String unityMethod)
+	{
+		_unityMethodFoundDevice = unityMethod;
+	}
 
-        		// Start the thread to connect with the given device
-        		mConnectThread = new ConnectThread(bd);
-        		mConnectThread.start();
-                _isOpened = false;
-                _isOpening = true;
-                return true;
+	public synchronized String[] GetBondedDevices()
+    {
+		Log.d(_logTag, "GetBondedDevices");
+		
+        List<String> btDevices = new ArrayList<String>();
+        
+        if(_btAdapter.isEnabled())
+        {
+        	try
+            {
+                Set<BluetoothDevice> bondedDevices = _btAdapter.getBondedDevices();
+                if (bondedDevices.size() > 0)
+                {
+                    for (BluetoothDevice bd : bondedDevices)
+                   		btDevices.add(String.format("%s,%s", bd.getName(), bd.getAddress()));
+                }
+            }
+            catch (Exception e)
+            {
             }
         }
+        else
+            _context.startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
+        
+        return btDevices.toArray(new String[btDevices.size()]);
+    }
 
-        return false;
+	public void StartSearch()
+	{
+		Log.d(_logTag, "StartSearch");
+		
+		if(_btAdapter == null)
+			return;
+		
+		_btAdapter.startDiscovery();
+	}
+	
+	public void StopSearch()
+	{
+		Log.d(_logTag, "StopSearch");
+		
+		if(_btAdapter == null)
+			return;
+		
+		if (_btAdapter.isDiscovering())
+			_btAdapter.cancelDiscovery();
+	}
+	
+	public synchronized void Open(String address)
+	{
+		Log.d(_logTag, "Open");
+		
+		if(_btAdapter.isEnabled())
+		{
+			_btDevice = _btAdapter.getRemoteDevice(address);
+			if(_btDevice != null)
+			{
+				try
+				{
+					_btSocket = _btDevice.createRfcommSocketToServiceRecord(SPP_UUID);
+					_btSocket.connect();
+					_InStream = _btSocket.getInputStream();
+					_OutStream = _btSocket.getOutputStream();
+				}
+				catch (IOException e)
+				{
+					Log.d(_logTag, "Open Failed");
+					close();
+					UnityPlayer.UnitySendMessage(_unityObject, _unityMethodOpenFailed, "Open Failed");
+				}
+			}
+		}
+		else
+			_context.startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
 	}
 	
 	public synchronized void Close()
 	{
-        _isOpened = false;
-        _isOpening = false;
+		Log.d(_logTag, "Close");
 		
-		if (mConnectThread != null)
-		{
-			mConnectThread.cancel();
-			mConnectThread = null;
-		}
-		if (mConnectedThread != null)
-		{
-			mConnectedThread.cancel();
-			mConnectedThread = null;
-		}		
+		close();
 	}
 	
-	public void ClearBuffer()
+	public boolean IsOpen()
 	{
-		_numRcvedData = 0;
-	}	
-
-	private synchronized void Connected(BluetoothSocket socket,	BluetoothDevice device)
-	{
-		// Cancel the thread that completed the connection
-		if (mConnectThread != null)
-		{
-			mConnectThread.cancel();
-			mConnectThread = null;
-		}
-
-		// Cancel any thread currently running a connection
-		if (mConnectedThread != null)
-		{
-			mConnectedThread.cancel();
-			mConnectedThread = null;
-		}
-
-		// Start the thread to manage the connection and perform transmissions
-		mConnectedThread = new ConnectedThread(socket);
-		mConnectedThread.start();
-		
-		ClearBuffer();
-        _isOpened = true;
-	}
-
-	public void Write(byte[] data)
-	{
-		// Create temporary object
-		ConnectedThread r;
-		// Synchronize a copy of the ConnectedThread
-		synchronized (this)
-		{
-			if (_isOpened == false)
-				return;
-			r = mConnectedThread;
-		}
-		// Perform the write unsynchronized
-		r.write(data);
+		return _isOpen;
 	}
 	
-	public byte[] Read()
+	public synchronized void Write(byte[] data)
 	{
-		if (_isOpened == false)
-			return null;
-		
-		byte[] data = new byte[_numRcvedData];
-		for(int i=0; i<_numRcvedData; i++)
-			data[i] = _rcvBuffer[i];
-		_numRcvedData = 0;
-		return data;
-	}
-	
-	private class ConnectThread extends Thread
-	{
-		private final BluetoothSocket mmSocket;
-		private final BluetoothDevice mmDevice;
-
-		public ConnectThread(BluetoothDevice device)
+		if(_isOpen)
 		{
-			mmDevice = device;
-			BluetoothSocket tmp = null;
-
-			// Get a BluetoothSocket for a connection with the
-			// given BluetoothDevice
-			try
+			if(_OutStream != null)
 			{
-				tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-			}
-			catch (IOException e)
-			{
-			}
-			mmSocket = tmp;
-		}
-
-		public void run()
-		{
-			setName("ConnectThread");
-
-			// Make a connection to the BluetoothSocket
-			try
-			{
-				mmSocket.connect();
-			}
-			catch (IOException e)
-			{
-                _isOpening = false;
-
-				// Close the socket
 				try
 				{
-					mmSocket.close();
+					_OutStream.write(data);
 				}
-				catch (IOException e2)
+				catch (Exception e)
 				{
+					Log.d(_logTag, "Write Error");
+					_isErrorClose = true;
+					_errorMessage = "Write Error";
+					close();
 				}
-				return;
-			}
-
-			// Reset the ConnectThread because we're done
-			synchronized (CommBluetooth.this)
-			{
-				mConnectThread = null;
-			}
-
-			// Start the connected thread
-			Connected(mmSocket, mmDevice);
-		}
-
-		public void cancel()
-		{
-			try
-			{
-				mmSocket.close();
-			}
-			catch (IOException e)
-			{
 			}
 		}
 	}
-
-	private class ConnectedThread extends Thread
+	
+	public int Avaliable()
 	{
-		private final BluetoothSocket mmSocket;
-		private final InputStream mmInStream;
-		private final OutputStream mmOutStream;
-
-		public ConnectedThread(BluetoothSocket socket)
+		if(_isOpen)
 		{
-			mmSocket = socket;
-			InputStream tmpIn = null;
-			OutputStream tmpOut = null;
-
-			// Get the BluetoothSocket input and output streams
-			try
+			if(_InStream != null)
 			{
-				tmpIn = socket.getInputStream();
-				tmpOut = socket.getOutputStream();
+				try
+				{
+					return _InStream.available();
+				}
+				catch (Exception e)
+				{
+					Log.d(_logTag, "Avaliable Error");
+					_isErrorClose = true;
+					_errorMessage = "Avaliable Error";
+					close();
+				}
 			}
-			catch (IOException e)
+			else
 			{
+				
 			}
-
-			mmInStream = tmpIn;
-			mmOutStream = tmpOut;
 		}
 		
-		public void run()
-		{
-            int bytes;
-
-            // Keep listening to the InputStream while connected
-            while (true)
-            {
-                try
-                {
-                	bytes = mmInStream.available();
-                	if(bytes > 0)
-                	{
-	                	if(bytes <= (_rcvBuffer.length - _numRcvedData))
-	                	{
-	                		mmInStream.read(_rcvBuffer, _numRcvedData, bytes);
-	                		_numRcvedData += bytes;
-	                	}
-                	}
-                }
-                catch (IOException e)
-                {
-                	if(_isOpened == true)
-                	{
-                        _isOpened = false;
-                	}
-                    break;
-                }
-            }
-		}
-
-		public void write(byte[] buffer)
-		{
-			try
-			{
-				mmOutStream.write(buffer);
-			}
-			catch (IOException e)
-			{
-			}
-		}
-
-		public void cancel()
-		{
-			try
-			{
-				mmSocket.close();
-			}
-			catch (IOException e)
-			{
-			}
-		}
+		return 0;
 	}
+	
+	public synchronized byte[] Read()
+	{
+		if(_isOpen)
+		{
+			if(_InStream != null)
+			{
+				try
+				{
+					byte[] data = new byte[_InStream.available()];
+					_InStream.read(data);
+					return data;
+				}
+				catch (Exception e)
+				{
+					Log.d(_logTag, "Read Error");
+					_isErrorClose = true;
+					_errorMessage = "Read Error";
+					close();
+				}
+			}
+			else
+			{
+				
+			}
+		}
+		
+		return null;
+	}
+	
+	private void close()
+	{
+		if(!_isOpen)
+			return;
+		
+		_isOpen = false;
+		
+		if(_btSocket != null)
+		{
+			try
+			{
+				_btSocket.close();
+			}
+			catch(Exception e)
+			{	
+			}
+			_btSocket = null;
+		}
+		
+		_btDevice = null;
+		_InStream = null;
+		_OutStream = null;
+	}
+	
+	private final BroadcastReceiver _bluetoothReceiver = new BroadcastReceiver()
+	{
+		@Override
+		public void onReceive(Context context, Intent intent)
+		{
+			String action = intent.getAction();
+
+			if (BluetoothDevice.ACTION_FOUND.equalsIgnoreCase(action))
+			{
+				BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+				Log.d(_logTag, "Bluetooth Device Found: " + device.getName());
+				
+				UnityPlayer.UnitySendMessage(_unityObject, _unityMethodFoundDevice, String.format("%s,%s", device.getName(), device.getAddress()));			
+			}
+			else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equalsIgnoreCase(action))
+			{
+				Log.d(_logTag, "ACTION_DISCOVERY_FINISHED");
+			}
+			else if (BluetoothDevice.ACTION_ACL_CONNECTED.equalsIgnoreCase(action))
+			{
+				Log.d(_logTag, "Bluetooth Device Connected!");
+				
+				_isOpen = true;
+				UnityPlayer.UnitySendMessage(_unityObject, _unityMethodOpenSuccess, "Connected");			
+			}
+			else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equalsIgnoreCase(action) || BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equalsIgnoreCase(action))
+			{
+				Log.d(_logTag, "Device Disconnected!!");
+				if(_isOpen)
+				{
+					close();
+					_isErrorClose = true;
+					_errorMessage = "Device Disconnected";
+				}
+				
+				if(_isErrorClose)
+				{
+					UnityPlayer.UnitySendMessage(_unityObject, _unityMethodErrorClose, _errorMessage);
+					_isErrorClose = false;
+					_errorMessage = "";
+				}
+			}
+			else
+			{
+				Log.d(_logTag, "UNKNOWN ACTION : " + action);
+			}
+		}
+	};
 }

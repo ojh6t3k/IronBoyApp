@@ -7,128 +7,144 @@ using UnityEngine.Events;
 
 public class ListView : MonoBehaviour
 {
-	public RectTransform itemPanel;
+    public RectTransform itemPanel;
 
-	public UnityEvent OnChangedSelection;
+    public UnityEvent OnChangedSelection;
 
-	private int _itemNum = 0;
-	private ListItem _createdItem;
-	private ListItem _selectedItem;
+    private int _itemNum = 0;
+    private ListItem _createdItem;
+    private ListItem _selectedItem;
 
-	// Use this for initialization
-	void Start ()
-	{
-	
-	}
-	
-	// Update is called once per frame
-	void Update ()
-	{
-	
-	}
+    void Awake()
+    {
+    }
 
-	public int itemCount
-	{
-		get
-		{
-			return itemPanel.transform.childCount;
-		}
-	}
+    // Use this for initialization
+    void Start()
+    {
 
-	public ListItem createdItem
-	{
-		get
-		{
-			return _createdItem;
-		}
-	}
+    }
 
-	public ListItem selectedItem
-	{
-		set
-		{
-			bool changed = false;
-			if(_selectedItem != null)
-			{
-				if(_selectedItem.Equals(value) == false)
-					changed = true;
-			}
-			else
-			{
-				if(value != null)
-					changed = true;
-			}
+    // Update is called once per frame
+    void Update()
+    {
 
-			if(_selectedItem != null)
-				_selectedItem.selected = false;
+    }
 
-			_selectedItem = value;
+    public int itemCount
+    {
+        get
+        {
+            return itemPanel.transform.childCount;
+        }
+    }
 
-			if(changed == true)
-				OnChangedSelection.Invoke();
-		}
-		get
-		{
-			return _selectedItem;
-		}
-	}
+    public ListItem createdItem
+    {
+        get
+        {
+            return _createdItem;
+        }
+    }
 
-	public void ClearItem()
-	{
-		List<GameObject> list = new List<GameObject>();
-		foreach(Transform item in itemPanel.transform)
-			list.Add(item.gameObject);
+    public ListItem selectedItem
+    {
+        get
+        {
+            return _selectedItem;
+        }
+        set
+        {
+            bool changed = false;
+            if (_selectedItem != null)
+            {
+                if (_selectedItem.Equals(value) == false)
+                    changed = true;
+            }
+            else
+            {
+                if (value != null)
+                    changed = true;
+            }
 
-		for(int i=0; i<list.Count; i++)
-			GameObject.DestroyImmediate(list[i]);
+            if (_selectedItem != null)
+                _selectedItem.selected = false;
 
-		_itemNum = 0;
-		_selectedItem = null;
-	}
+            _selectedItem = value;
+            if (_selectedItem != null)
+                _selectedItem.selected = true;
 
-	public void AddItem(ListItem item, Sprite image, string text, Object data)
-	{
-		if(item == null)
-		{
-			_createdItem = null;
-			return;
-		}
+            if (changed == true)
+                OnChangedSelection.Invoke();
+        }
+    }
 
-		GameObject go = GameObject.Instantiate(item.gameObject);
-		go.transform.SetParent(itemPanel.transform);
-		go.transform.localScale = Vector3.one;
-		_createdItem = go.GetComponent<ListItem> ();
-		_createdItem.owner = this;
-		if(_createdItem.image != null)
-		{
-			if(image != null)
-				_createdItem.image.sprite = image;
-		}
-		if(_createdItem.text != null)
-			_createdItem.text.text = text;
-		_createdItem.data = data;
-		_itemNum++;
-	}
+    public int selectedIndex
+    {
+        get
+        {
+            if (_selectedItem == null)
+                return -1;
 
-	public void InsertItem(ListItem item, Sprite image, string text, Object data)
-	{
-		if(_selectedItem == null)
-			return;
+            return _selectedItem.index;
+        }
+        set
+        {
+            if (value < 0 || value >= itemCount)
+                return;
 
-		int index = _selectedItem.index;
-		AddItem(item, image, text, data);
-		if(_createdItem != null)
-			_createdItem.transform.SetSiblingIndex(index);
-	}
+            selectedItem = itemPanel.transform.GetChild(value).GetComponent<ListItem>();
+        }
+    }
 
-	public void RemoveItem()
-	{
-		if(_selectedItem == null)
-			return;
+    public void ClearItem()
+    {
+        _selectedItem = null;
 
-		GameObject.DestroyImmediate(_selectedItem.gameObject);
+        List<GameObject> list = new List<GameObject>();
+        foreach (Transform item in itemPanel.transform)
+            list.Add(item.gameObject);
 
-		_selectedItem = null;
-		_itemNum--;
-	}
+        for (int i = 0; i < list.Count; i++)
+            GameObject.DestroyImmediate(list[i]);
+
+        _itemNum = 0;
+    }
+
+    public void AddItem(ListItem item)
+    {
+        if (item == null)
+        {
+            _createdItem = null;
+            return;
+        }
+
+        _createdItem = item;
+        _createdItem.transform.SetParent(itemPanel.transform);
+        _createdItem.transform.localScale = Vector3.one;
+        _createdItem.owner = this;
+        _itemNum++;
+    }
+
+    public void InsertItem(ListItem item)
+    {
+        if (_selectedItem == null)
+            return;
+
+        int index = _selectedItem.index;
+        AddItem(item);
+        if (_createdItem != null)
+            _createdItem.transform.SetSiblingIndex(index);
+    }
+
+    public void RemoveItem()
+    {
+        if (_selectedItem == null)
+            return;
+
+        GameObject.DestroyImmediate(_selectedItem.gameObject);
+
+        _selectedItem = null;
+        _itemNum--;
+    }
 }

@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System;
 
 public class Vibration : MonoBehaviour
 {
@@ -10,21 +10,28 @@ public class Vibration : MonoBehaviour
     void Awake()
     {
 #if UNITY_ANDROID
-        AndroidJavaClass activityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-        if(activityClass != null)
+        try
         {
-            AndroidJavaObject context = activityClass.GetStatic<AndroidJavaObject>("currentActivity");
-            if(context != null)
+            AndroidJavaClass activityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            if (activityClass != null)
             {
-                AndroidJavaClass pluginClass = new AndroidJavaClass("com.smartmaker.android.Vibration");
-                if(pluginClass != null)
+                AndroidJavaObject context = activityClass.GetStatic<AndroidJavaObject>("currentActivity");
+                if (context != null)
                 {
-                    _android = pluginClass.CallStatic<AndroidJavaObject>("GetInstance");
-                    if (!_android.Call<bool>("Initialize", context))
-                        _android = null;
+                    AndroidJavaClass pluginClass = new AndroidJavaClass("com.smartmaker.android.Vibration");
+                    if (pluginClass != null)
+                    {
+                        _android = pluginClass.CallStatic<AndroidJavaObject>("GetInstance");
+                        if (!_android.Call<bool>("Initialize", context))
+                            _android = null;
+                    }
                 }
             }
         }
+        catch(Exception)
+        {
+            _android = null;
+        }        
 
         if (_android == null)
             Debug.Log("Android Vibration Failed!");

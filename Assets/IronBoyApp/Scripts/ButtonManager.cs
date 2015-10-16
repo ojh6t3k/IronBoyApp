@@ -91,7 +91,7 @@ public class ButtonManager : MonoBehaviour
 			if(uiInput != null)
 			{
 				uiInput.interactable = true;
-				uiInput.text = selectedItem.text.text;
+				uiInput.text = selectedItem.textList[0].text;
 			}
 		}
 	}
@@ -279,9 +279,9 @@ public class ButtonManager : MonoBehaviour
 			return;
 
         if (buttonValue >= 0)
-            item.text.text = buttonValue.ToString();
+            item.textList[0].text = buttonValue.ToString();
         else
-            item.text.text = "None";
+            item.textList[0].text = "None";
 
         if (buttonName.Equals("ButtonU"))
 			buttonU = buttonValue;

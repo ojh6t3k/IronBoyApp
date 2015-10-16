@@ -61,7 +61,7 @@ namespace SmartMaker
                     if (_android != null)
                         _android.Call("StopSearch");
 #endif
-                    OnSearchCompleted.Invoke();
+                    OnStopSearch.Invoke();
                 }
             }
         }
@@ -110,9 +110,10 @@ namespace SmartMaker
             }
         }
 
-        public override void Search()
+        public override void StartSearch()
         {
             foundDevices.Clear();
+            OnStartSearch.Invoke();
 
 #if UNITY_ANDROID
             if (_android != null)
@@ -133,6 +134,19 @@ namespace SmartMaker
                 _searchTimeout = searchTimeout;
             }
 #endif
+        }
+
+        public override void StopSearch()
+        {
+            if (_searchTimeout <= 0f)
+                return;
+
+#if UNITY_ANDROID
+            if (_android != null)
+                _android.Call("StopSearch");
+#endif
+            _searchTimeout = 0f;
+            OnStopSearch.Invoke();
         }
 
         public override void Write(byte[] data)
