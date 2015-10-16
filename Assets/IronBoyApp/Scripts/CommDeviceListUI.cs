@@ -56,16 +56,16 @@ public class CommDeviceListUI : MonoBehaviour
     private void OnSearchClick()
     {
         if (commObject != null)
-        {
             commObject.StartSearch();
-            uiSearch.interactable = false;
-        }
     }
 
     private void OnStartSearch()
     {
         if (uiDeviceList != null)
             uiDeviceList.ClearItem();
+
+        if (uiSearch != null)
+            uiSearch.interactable = false;
 
         _lastFoundDevices.Clear();
     }

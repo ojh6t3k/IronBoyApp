@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
-
-import com.unity3d.player.UnityPlayer;
-
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,15 +11,15 @@ import java.util.List;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.util.Log;
+
+import com.unity3d.player.UnityPlayer;
+
 
 @SuppressLint("NewApi")
 public class CommBluetooth
@@ -66,6 +63,9 @@ public class CommBluetooth
         	Log.d(_logTag, "Bluetooth Adapter Failed");
         	return false;
         }
+        
+        if(!_btAdapter.isEnabled())
+        	context.startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
 		
         _context = context;
         _unityObject = unityObject;        
@@ -158,27 +158,27 @@ public class CommBluetooth
 		Log.d(_logTag, "Open");
 		
 		if(_btAdapter.isEnabled())
-		{
-			_btDevice = _btAdapter.getRemoteDevice(address);
-			if(_btDevice != null)
+		{			
+			try
 			{
-				try
-				{
-					_btSocket = _btDevice.createRfcommSocketToServiceRecord(SPP_UUID);
-					_btSocket.connect();
-					_InStream = _btSocket.getInputStream();
-					_OutStream = _btSocket.getOutputStream();
-				}
-				catch (IOException e)
-				{
-					Log.d(_logTag, "Open Failed");
-					close();
-					UnityPlayer.UnitySendMessage(_unityObject, _unityMethodOpenFailed, "Open Failed");
-				}
+				_btDevice = _btAdapter.getRemoteDevice(address);
+				_btSocket = _btDevice.createRfcommSocketToServiceRecord(SPP_UUID);
+				_btSocket.connect();				
+			}
+			catch (IOException e)
+			{
+				Log.d(_logTag, "Open Failed");
+				close();
+				UnityPlayer.UnitySendMessage(_unityObject, _unityMethodOpenFailed, "Open Failed");
 			}
 		}
 		else
+		{
+			Log.d(_logTag, "Bluetooth Disabled");
+			
 			_context.startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
+			UnityPlayer.UnitySendMessage(_unityObject, _unityMethodOpenFailed, "Bluetooth Disabled");
+		}
 	}
 	
 	public synchronized void Close()
@@ -214,7 +214,7 @@ public class CommBluetooth
 		}
 	}
 	
-	public int Avaliable()
+	public int Available()
 	{
 		if(_isOpen)
 		{
@@ -316,8 +316,19 @@ public class CommBluetooth
 			{
 				Log.d(_logTag, "Bluetooth Device Connected!");
 				
-				_isOpen = true;
-				UnityPlayer.UnitySendMessage(_unityObject, _unityMethodOpenSuccess, "Connected");			
+				try
+				{
+					_InStream = _btSocket.getInputStream();
+					_OutStream = _btSocket.getOutputStream();
+					_isOpen = true;
+					UnityPlayer.UnitySendMessage(_unityObject, _unityMethodOpenSuccess, "Connected");
+				}
+				catch(Exception e)
+				{
+					Log.d(_logTag, "Open Failed");
+					close();
+					UnityPlayer.UnitySendMessage(_unityObject, _unityMethodOpenFailed, "Open Failed");
+				}				
 			}
 			else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equalsIgnoreCase(action) || BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equalsIgnoreCase(action))
 			{

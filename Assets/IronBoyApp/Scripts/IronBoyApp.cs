@@ -258,9 +258,10 @@ public class IronBoyApp : HostApp
 
 	protected override void OnCommOpen ()
 	{
+        base.OnCommOpen();
+
 		_processRx = false;
 		_rxDataBytes.Clear();
-		TimeoutReset();
 		
 		OnConnected.Invoke ();
 	}

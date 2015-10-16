@@ -20,7 +20,7 @@ public class IronBoyAppProxyInspector : Editor
 			proxy.eventOnConnected = ProxyInspectorUtil.EventField(target, "OnConnected", proxy.eventOnConnected, proxy.builtInOnConnected);
 			proxy.eventOnConnectionFailed = ProxyInspectorUtil.EventField(target, "OnConnectionFailed", proxy.eventOnConnectionFailed, proxy.builtInOnConnectionFailed);
 			proxy.eventOnDisconnected = ProxyInspectorUtil.EventField(target, "OnDisonnected", proxy.eventOnDisconnected, proxy.builtInOnDisconnected);
-            proxy.eventOnDisconnected = ProxyInspectorUtil.EventField(target, "OnLostConnection", proxy.eventOnLostConnection, proxy.builtInOnLostConnection);
+            proxy.eventOnLostConnection = ProxyInspectorUtil.EventField(target, "OnLostConnection", proxy.eventOnLostConnection, proxy.builtInOnLostConnection);
         }
 	}
 }

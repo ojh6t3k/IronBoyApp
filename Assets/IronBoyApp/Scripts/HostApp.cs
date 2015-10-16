@@ -18,7 +18,6 @@ namespace SmartMaker
         public UnityEvent OnDisconnected;
         public UnityEvent OnLostConnection;
         
-        private bool _opened = false;
         private bool _connected = false;
         private float _timeout = 0;
         private float _fpsPreTime;
@@ -27,9 +26,6 @@ namespace SmartMaker
         protected virtual void OnAwake() {}
         protected virtual void OnStart() {}
         protected virtual void OnUpdate() {}
-        protected virtual void OnCommOpen() {}
-        protected virtual void OnCommOpenFailed() {}
-        protected virtual void OnCommClose() {}
         protected virtual void OnConnect() {}
         protected virtual void OnDisconnect() {}
         protected virtual void OnErrorDisconnect() {}
@@ -38,9 +34,9 @@ namespace SmartMaker
         {
             if(commObject != null)
             {
-                commObject.OnOpen.AddListener(CommObjectOnOpen);
-                commObject.OnOpenFailed.AddListener(CommObjectOnOpenFailed);
-                commObject.OnErrorClosed.AddListener(CommObjectOnErrorClose);
+                commObject.OnOpen.AddListener(OnCommOpen);
+                commObject.OnOpenFailed.AddListener(OnCommOpenFailed);
+                commObject.OnErrorClosed.AddListener(OnCommErrorClose);
             }
 
             OnConnected.AddListener(OnConnectedEventHandler);
@@ -57,19 +53,22 @@ namespace SmartMaker
     	// Update is called once per frame
     	void Update()
         {
-            if(_opened == true)
+            if(commObject != null)
             {
-                OnUpdate();
-
-                // Check timeout
-                if(useTimeout == true)
+                if (commObject.IsOpen)
                 {
-                    if(_timeout > timeoutSec) // wait until timeout seconds
-                        ErrorDisconnect();
-                    else
-                        _timeout += Time.deltaTime;
+                    OnUpdate();
+
+                    // Check timeout
+                    if (useTimeout == true)
+                    {
+                        if (_timeout > timeoutSec) // wait until timeout seconds
+                            ErrorDisconnect();
+                        else
+                            _timeout += Time.deltaTime;
+                    }
                 }
-            }
+            }            
     	}
 
         public bool connected
@@ -108,8 +107,6 @@ namespace SmartMaker
 
             _connected = false;
             OnDisconnect();
-
-            _opened = false;
             commObject.Close();
 
             OnDisconnected.Invoke();
@@ -117,13 +114,11 @@ namespace SmartMaker
 
         private void ErrorDisconnect()
         {
-            bool state = _opened;
+            bool state = _connected;
 
             _connected = false;
             OnErrorDisconnect();
-
             commObject.Close();
-            _opened = false;
              
             if(state == false)
             {
@@ -155,24 +150,19 @@ namespace SmartMaker
             _fpsPreTime = Time.time;
         }
 
-        private void CommObjectOnOpen()
+        protected virtual void OnCommOpen()
         {
-            _opened = true;
             TimeoutReset();
+        }
 
-            OnCommOpen();
-        }
-        
-        private void CommObjectOnOpenFailed()
+        protected virtual void OnCommOpenFailed()
         {
             ErrorDisconnect();
-            OnCommOpenFailed();
         }
-        
-        private void CommObjectOnErrorClose()
+
+        protected virtual void OnCommErrorClose()
         {
             ErrorDisconnect();
-            OnCommClose();
         }
     }
 }

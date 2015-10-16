@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using System.Threading;
 
 
 namespace SmartMaker
@@ -10,6 +11,8 @@ namespace SmartMaker
         public float searchTimeout = 5f;
 
         private float _searchTimeout = 0f;
+        private Thread _openThread;
+        private bool _threadOnOpenFailed = false;
 
 #if UNITY_ANDROID
         private AndroidJavaObject _android = null;
@@ -52,6 +55,12 @@ namespace SmartMaker
 
         void Update()
         {
+            if (_threadOnOpenFailed)
+            {
+                OnOpenFailed.Invoke();
+                _threadOnOpenFailed = false;
+            }
+
             if (_searchTimeout > 0f)
             {
                 _searchTimeout -= Time.deltaTime;
@@ -69,16 +78,13 @@ namespace SmartMaker
         #region Override
         public override void Open()
         {
+            StopSearch();
+
             if (IsOpen)
                 return;
 
-#if UNITY_ANDROID
-            if (_android != null)
-            {
-                _android.Call("StopSearch");
-                _android.Call("Open", device.address);
-            }
-#endif
+            _openThread = new Thread(openThread);
+            _openThread.Start();
         }
 
         public override void Close()
@@ -113,6 +119,8 @@ namespace SmartMaker
         public override void StartSearch()
         {
             foundDevices.Clear();
+
+            _searchTimeout = searchTimeout;
             OnStartSearch.Invoke();
 
 #if UNITY_ANDROID
@@ -131,7 +139,6 @@ namespace SmartMaker
                     OnFoundDevice.Invoke();
 
                 _android.Call("StartSearch");
-                _searchTimeout = searchTimeout;
             }
 #endif
         }
@@ -201,7 +208,10 @@ namespace SmartMaker
 
             string[] tokens = message.Split(new char[] { ',' });
             CommDevice foundDevice = new CommDevice();
-            foundDevice.name = tokens[0];
+            if (tokens[0].Length == 0)
+                foundDevice.name = tokens[1];
+            else
+                foundDevice.name = tokens[0];
             foundDevice.address = tokens[1];
 
             for (int i = 0; i < foundDevices.Count; i++)
@@ -215,5 +225,29 @@ namespace SmartMaker
         }
 #endif
 
+        private void openThread()
+        {
+#if UNITY_ANDROID
+            AndroidJNI.AttachCurrentThread();
+#endif
+            bool openTry = false;
+            
+#if UNITY_ANDROID
+                if (_android != null)
+                {
+                    _android.Call("Open", device.address);
+                    openTry = true;
+                }
+#endif
+
+            if (!openTry)
+                _threadOnOpenFailed = true;
+
+#if UNITY_ANDROID
+            AndroidJNI.DetachCurrentThread();
+#endif
+            _openThread.Abort();
+            return;
+        }
     }
 }

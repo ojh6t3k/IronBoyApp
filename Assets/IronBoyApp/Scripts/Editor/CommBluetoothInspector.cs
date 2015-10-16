@@ -6,7 +6,6 @@ using SmartMaker;
 [CustomEditor(typeof(CommBluetooth))]
 public class CommBluetoothInspector : Editor
 {
-	SerializedProperty foundDevices;
 	SerializedProperty device;
     SerializedProperty searchTimeout;
     SerializedProperty OnOpen;
@@ -20,7 +19,6 @@ public class CommBluetoothInspector : Editor
 
     void OnEnable()
 	{
-        foundDevices = serializedObject.FindProperty("foundDevices");
         device = serializedObject.FindProperty("device");
         searchTimeout = serializedObject.FindProperty("searchTimeout");
         OnOpen = serializedObject.FindProperty("OnOpen");
@@ -38,7 +36,7 @@ public class CommBluetoothInspector : Editor
 #endif
 		this.serializedObject.Update();
 		
-		CommBluetooth bluetooth = (CommBluetooth)target;
+	//	CommBluetooth bluetooth = (CommBluetooth)target;
 
         EditorGUILayout.PropertyField(device, new GUIContent("Device"), true);
         EditorGUILayout.PropertyField(searchTimeout, new GUIContent("Search Timeout"));
